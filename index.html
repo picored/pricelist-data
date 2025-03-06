@@ -3,86 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Listă de Prețuri</title>
+    <title>Stocuri și Prețuri</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        input, select { width: 100%; padding: 10px; margin-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; }
+        input, button { margin: 10px 0; padding: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background-color: #f4f4f4; }
     </style>
 </head>
 <body>
-    <h2>Listă de Prețuri</h2>
-    <input type="text" id="search" placeholder="Caută după model..." onkeyup="searchTable()">
-    <select id="promoFilter" onchange="searchTable()">
-        <option value="all">Toate Produsele</option>
-        <option value="promo">Promoții</option>
-    </select>
+    <h2>Lista Stocuri și Prețuri</h2>
+    <label for="exchangeRate">Curs Euro:</label>
+    <input type="number" id="exchangeRate" value="5.1" step="0.01">
+    
+    <label for="markup">Adaos Comercial (%):</label>
+    <input type="number" id="markup" value="30" step="1">
+    
+    <button onclick="updatePrices()">Actualizează Prețurile</button>
+
     <table>
         <thead>
             <tr>
-                <th>Cat.Pag.</th>
-                <th>Brand</th>
-                <th>Model</th>
-                <th>Descriere</th>
-                <th>Pricesheet</th>
-                <th>Pret unitar fara TVA (Lei)</th>
-                <th>Promo Discount</th>
-                <th>Perioada sfarsit discount</th>
+                <th>Cod</th>
+                <th>Produs</th>
+                <th>Culoare</th>
+                <th>Mărime</th>
+                <th>Stoc</th>
+                <th>Preț EUR</th>
+                <th>Preț RON</th>
             </tr>
         </thead>
-        <tbody id="productTable">
-        </tbody>
+        <tbody id="stockTable"></tbody>
     </table>
 
     <script>
-        document.addEventListener("DOMContentLoaded", fetchProducts);
+        let stockData = [];
 
-        function fetchProducts() {
-            fetch("https://picored.github.io/pricelist-data/pricelist.json") // Modifică URL-ul cu linkul tău real
+        function fetchStock() {
+            fetch("stock_with_markup.json") // Modifică cu URL-ul tău corect dacă hostezi JSON-ul
                 .then(response => response.json())
                 .then(data => {
-                    let table = document.getElementById("productTable");
-                    table.innerHTML = "";
-                    const exchangeRate = 5.1; // Presupunem 1€ = 5.1 lei (schimbă cu rata corectă)
-                    data.forEach(product => {
-                        let priceEuro = parseFloat(product["Sell Price*(€)"]) || 0;
-                        let priceLei = (priceEuro * exchangeRate).toFixed(2);
-                        let row = `<tr>
-                            <td>${product["Cat.Page"] || "-"}</td>
-                            <td>${product.Brand || "-"}</td>
-                            <td>${product.Model || "-"}</td>
-                            <td>${product.Title || "-"}</td>
-                            <td>${product.Pricesheet || "-"}</td>
-                            <td>${priceLei} Lei</td>
-                            <td>${product["Promo Discount"] || "-"}</td>
-                            <td>${product["Discount Ends at"] || "-"}</td>
-                        </tr>`;
-                        table.innerHTML += row;
-                    });
+                    stockData = data;
+                    renderTable();
                 })
-                .catch(error => console.error("Eroare la încărcarea datelor: ", error));
+                .catch(error => console.error("Eroare la încărcarea stocurilor:", error));
         }
 
-        function searchTable() {
-            let input = document.getElementById("search").value.toUpperCase();
-            let promoFilter = document.getElementById("promoFilter").value;
-            let table = document.getElementById("productTable");
-            let rows = table.getElementsByTagName("tr");
-            
-            for (let i = 0; i < rows.length; i++) {
-                let modelTd = rows[i].getElementsByTagName("td")[2]; // Coloana Model
-                let pricesheetTd = rows[i].getElementsByTagName("td")[4]; // Coloana Pricesheet
-                if (modelTd && pricesheetTd) {
-                    let modelText = modelTd.textContent || modelTd.innerText;
-                    let pricesheetText = pricesheetTd.textContent || pricesheetTd.innerText;
-                    let matchesModel = modelText.toUpperCase().indexOf(input) > -1;
-                    let matchesPromo = (promoFilter === "all") || (promoFilter === "promo" && pricesheetText.toUpperCase().includes("PROMO"));
-                    rows[i].style.display = (matchesModel && matchesPromo) ? "" : "none";
-                }
-            }
+        function renderTable() {
+            let table = document.getElementById("stockTable");
+            table.innerHTML = "";
+            let exchangeRate = parseFloat(document.getElementById("exchangeRate").value);
+            let markup = parseFloat(document.getElementById("markup").value) / 100;
+
+            stockData.forEach(product => {
+                let priceEur = product.price;
+                let priceWithMarkup = priceEur * (1 + markup);
+                let priceRon = (priceWithMarkup * exchangeRate).toFixed(2);
+
+                let row = `<tr>
+                    <td>${product.sku}</td>
+                    <td>${product.style}</td>
+                    <td>${product.color}</td>
+                    <td>${product.size}</td>
+                    <td>${product.uttstock}</td>
+                    <td>${priceEur.toFixed(2)} €</td>
+                    <td>${priceRon} Lei</td>
+                </tr>`;
+                table.innerHTML += row;
+            });
         }
+
+        function updatePrices() {
+            renderTable();
+        }
+
+        document.addEventListener("DOMContentLoaded", fetchStock);
     </script>
 </body>
 </html>
