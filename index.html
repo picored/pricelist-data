@@ -23,7 +23,7 @@
                 <th>Model</th>
                 <th>Title</th>
                 <th>Pricesheet</th>
-                <th>Sell Price (€)</th>
+                <th>Sell Price (Lei)</th>
                 <th>Promo Discount</th>
                 <th>Discount Ends at</th>
             </tr>
@@ -36,19 +36,22 @@
         document.addEventListener("DOMContentLoaded", fetchProducts);
 
         function fetchProducts() {
-            fetch("https://picored.github.io/pricelist-data/pricelist.json") // URL-ul JSON-ului furnizat
+            fetch("https://username.github.io/pricelist-page/pricelist.json") // Modifică URL-ul cu linkul tău real
                 .then(response => response.json())
                 .then(data => {
                     let table = document.getElementById("productTable");
                     table.innerHTML = "";
+                    const exchangeRate = 5.1; // Presupunem 1€ = 5 lei (schimbă cu rata corectă)
                     data.forEach(product => {
+                        let priceEuro = parseFloat(product["Sell Price*(€)"]) || 0;
+                        let priceLei = (priceEuro * exchangeRate).toFixed(2);
                         let row = `<tr>
                             <td>${product["Cat.Page"] || "-"}</td>
                             <td>${product.Brand || "-"}</td>
                             <td>${product.Model || "-"}</td>
                             <td>${product.Title || "-"}</td>
                             <td>${product.Pricesheet || "-"}</td>
-                            <td>${product["Sell Price*(€)"] ? product["Sell Price*(€)"] + " €" : "-"}</td>
+                            <td>${priceLei} Lei</td>
                             <td>${product["Promo Discount"] || "-"}</td>
                             <td>${product["Discount Ends at"] || "-"}</td>
                         </tr>`;
