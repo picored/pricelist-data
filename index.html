@@ -6,7 +6,7 @@
     <title>Listă de Prețuri</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        input { width: 100%; padding: 10px; margin-bottom: 10px; }
+        input, select { width: 100%; padding: 10px; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background-color: #f4f4f4; }
@@ -15,6 +15,10 @@
 <body>
     <h2>Listă de Prețuri</h2>
     <input type="text" id="search" placeholder="Caută după model..." onkeyup="searchTable()">
+    <select id="promoFilter" onchange="searchTable()">
+        <option value="all">Toate Produsele</option>
+        <option value="promo">Promoții</option>
+    </select>
     <table>
         <thead>
             <tr>
@@ -41,7 +45,7 @@
                 .then(data => {
                     let table = document.getElementById("productTable");
                     table.innerHTML = "";
-                    const exchangeRate = 5.1; // Presupunem 1€ = 5 lei (schimbă cu rata corectă)
+                    const exchangeRate = 5.1; // Presupunem 1€ = 5.1 lei (schimbă cu rata corectă)
                     data.forEach(product => {
                         let priceEuro = parseFloat(product["Sell Price*(€)"]) || 0;
                         let priceLei = (priceEuro * exchangeRate).toFixed(2);
@@ -63,14 +67,19 @@
 
         function searchTable() {
             let input = document.getElementById("search").value.toUpperCase();
+            let promoFilter = document.getElementById("promoFilter").value;
             let table = document.getElementById("productTable");
             let rows = table.getElementsByTagName("tr");
             
             for (let i = 0; i < rows.length; i++) {
-                let td = rows[i].getElementsByTagName("td")[2]; // Caută în coloana Model
-                if (td) {
-                    let txtValue = td.textContent || td.innerText;
-                    rows[i].style.display = txtValue.toUpperCase().indexOf(input) > -1 ? "" : "none";
+                let modelTd = rows[i].getElementsByTagName("td")[2]; // Coloana Model
+                let pricesheetTd = rows[i].getElementsByTagName("td")[4]; // Coloana Pricesheet
+                if (modelTd && pricesheetTd) {
+                    let modelText = modelTd.textContent || modelTd.innerText;
+                    let pricesheetText = pricesheetTd.textContent || pricesheetTd.innerText;
+                    let matchesModel = modelText.toUpperCase().indexOf(input) > -1;
+                    let matchesPromo = (promoFilter === "all") || (promoFilter === "promo" && pricesheetText.toUpperCase().includes("PROMO"));
+                    rows[i].style.display = (matchesModel && matchesPromo) ? "" : "none";
                 }
             }
         }
