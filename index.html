@@ -6,7 +6,7 @@
     <title>Stocuri și Prețuri</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        input, button { margin: 10px 0; padding: 10px; }
+        input, button { margin: 10px 0; padding: 10px; width: 100%; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background-color: #f4f4f4; }
@@ -14,14 +14,8 @@
 </head>
 <body>
     <h2>Lista Stocuri și Prețuri</h2>
-    <label for="exchangeRate">Curs Euro:</label>
-    <input type="number" id="exchangeRate" value="5.1" step="0.01">
+    <input type="text" id="search" placeholder="Caută după cod, produs sau special price..." onkeyup="searchTable()">
     
-    <label for="markup">Adaos Comercial (%):</label>
-    <input type="number" id="markup" value="30" step="1">
-    
-    <button onclick="updatePrices()">Actualizează Prețurile</button>
-
     <table>
         <thead>
             <tr>
@@ -30,8 +24,7 @@
                 <th>Culoare</th>
                 <th>Mărime</th>
                 <th>Stoc</th>
-                <th>Preț EUR</th>
-                <th>Preț RON</th>
+                <th>Preț Special (RON)</th>
             </tr>
         </thead>
         <tbody id="stockTable"></tbody>
@@ -39,9 +32,11 @@
 
     <script>
         let stockData = [];
+        const exchangeRate = 5.1; // Curs fix Euro -> RON
+        const markup = 0.60; // Adaos comercial fix 30%
 
         function fetchStock() {
-            fetch("stock2025-03-06.json") // Modifică cu URL-ul tău corect dacă hostezi JSON-ul
+            fetch("stock_with_markup.json") // Modifică cu URL-ul corect dacă hostezi JSON-ul
                 .then(response => response.json())
                 .then(data => {
                     stockData = data;
@@ -53,9 +48,7 @@
         function renderTable() {
             let table = document.getElementById("stockTable");
             table.innerHTML = "";
-            let exchangeRate = parseFloat(document.getElementById("exchangeRate").value);
-            let markup = parseFloat(document.getElementById("markup").value) / 100;
-
+            
             stockData.forEach(product => {
                 let priceEur = product.price;
                 let priceWithMarkup = priceEur * (1 + markup);
@@ -67,15 +60,32 @@
                     <td>${product.color}</td>
                     <td>${product.size}</td>
                     <td>${product.uttstock}</td>
-                    <td>${priceEur.toFixed(2)} €</td>
                     <td>${priceRon} Lei</td>
                 </tr>`;
                 table.innerHTML += row;
             });
         }
 
-        function updatePrices() {
-            renderTable();
+        function searchTable() {
+            let input = document.getElementById("search").value.toUpperCase();
+            let table = document.getElementById("stockTable");
+            let rows = table.getElementsByTagName("tr");
+            
+            for (let i = 0; i < rows.length; i++) {
+                let td1 = rows[i].getElementsByTagName("td")[0]; // Cod
+                let td2 = rows[i].getElementsByTagName("td")[1]; // Produs
+                let td3 = rows[i].getElementsByTagName("td")[5]; // Special Price
+                if (td1 || td2 || td3) {
+                    let txtValue1 = td1 ? td1.textContent || td1.innerText : "";
+                    let txtValue2 = td2 ? td2.textContent || td2.innerText : "";
+                    let txtValue3 = td3 ? td3.textContent || td3.innerText : "";
+                    
+                    let matches = txtValue1.toUpperCase().indexOf(input) > -1 ||
+                                  txtValue2.toUpperCase().indexOf(input) > -1 ||
+                                  txtValue3.toUpperCase().indexOf(input) > -1;
+                    rows[i].style.display = matches ? "" : "none";
+                }
+            }
         }
 
         document.addEventListener("DOMContentLoaded", fetchStock);
