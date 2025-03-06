@@ -18,14 +18,14 @@
     <table>
         <thead>
             <tr>
-                <th>Cat.Page</th>
+                <th>Cat.Pag.</th>
                 <th>Brand</th>
                 <th>Model</th>
-                <th>Title</th>
+                <th>Descriere</th>
                 <th>Pricesheet</th>
-                <th>Sell Price (Lei)</th>
+                <th>Pret unitar fara TVA (Lei)</th>
                 <th>Promo Discount</th>
-                <th>Discount Ends at</th>
+                <th>Perioada sfarsit discount</th>
             </tr>
         </thead>
         <tbody id="productTable">
@@ -36,7 +36,7 @@
         document.addEventListener("DOMContentLoaded", fetchProducts);
 
         function fetchProducts() {
-            fetch("https://username.github.io/pricelist-page/pricelist.json") // Modifică URL-ul cu linkul tău real
+            fetch("https://picored.github.io/pricelist-data/pricelist.json") // Modifică URL-ul cu linkul tău real
                 .then(response => response.json())
                 .then(data => {
                     let table = document.getElementById("productTable");
